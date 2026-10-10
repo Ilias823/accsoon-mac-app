@@ -1,0 +1,19 @@
+# Never commit Accsoon's apps or decompiled code
+*.apk
+*.xapk
+*.apks
+*.ipa
+*.app/
+decompiled/
+vendor-bin/
+
+# macOS / Xcode
+.DS_Store
+xcuserdata/
+DerivedData/
+build/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
