@@ -35,11 +35,29 @@ assets into the repo — only our own notes and our own implementation.
 
 ## Steps
 
+### 0. Set up the Mac (work moves to a local Claude Code session)
+In Terminal on the Mac:
+1. Install Homebrew (it asks for your Mac password, and may install Apple's
+   Command Line Tools first — accept):
+   `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
+2. Make `brew` available (Apple Silicon) — the installer prints these too:
+   `echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> ~/.zprofile && eval "$(/opt/homebrew/bin/brew shellenv)"`
+   Check: `brew --version`.
+3. Tools: `brew install jadx ffmpeg node nmap python` and
+   `brew install --cask wireshark` (jadx pulls in Java automatically).
+4. Claude Code: `npm install -g @anthropic-ai/claude-code`.
+5. Project: `git clone https://github.com/Ilias823/accsoon-mac-app`,
+   `mkdir ~/accsoon-re && mv ~/Downloads/accsoon.apk ~/accsoon-re/`
+   (APK stays outside the repo).
+6. `cd accsoon-mac-app && claude`, then: "Follow docs/PLAN.md step 1:
+   decompile ~/accsoon-re/accsoon.apk and write docs/protocol.md."
+Later, for step 5: install Xcode from the Mac App Store.
+
 ### 1. Static analysis (no device)
-- User: get the Accsoon Go APK (e.g. from APKMirror) and copy the Mac app bundle
-  (`/Applications/Accsoon Go.app`) somewhere; upload both to the session or a
-  private location — **not** committed to the repo.
-- Me: decompile with `jadx` / Ghidra in this container. Look for: SSID/IP
+- APK is at `~/accsoon-re/accsoon.apk` (outside the repo). Optionally also copy the Mac app bundle
+  (`/Applications/Accsoon Go.app`) into `~/accsoon-re/` —
+  **never** committed to the repo.
+- Me: decompile with `jadx` / Ghidra. Look for: SSID/IP
   patterns, ports, socket code, packet structs/magic bytes, H.264/H.265 decoder
   setup, RTP/RTSP/custom framing, any encryption/auth keys.
 - Output: `docs/protocol.md` — our own written description of the protocol.
@@ -47,7 +65,7 @@ assets into the repo — only our own notes and our own implementation.
 ### 2. Dynamic check on the Mac (no device)
 - Run Accsoon Go with Wireshark on `en0` and `nettop`/`lsof -i` to see what it
   tries to reach.
-- Me: write `tools/fake_transmitter.py` that listens on the discovered port(s)
+- `tools/fake_transmitter.py` (already written) listens on the discovered port(s)
   and logs whatever the app sends; extend it with replies from the static
   analysis to push the app further into the handshake.
 
@@ -77,6 +95,6 @@ assets into the repo — only our own notes and our own implementation.
   Wi-Fi and it reconnects; latency visibly comparable to the iPad app.
 - Protocol parsing has unit tests driven by packets from the `.pcap`.
 
-## Limits of this session
-I can't join your Wi-Fi or build/run Mac apps here (Linux container). You run the
-Mac-side steps and builds; I do decompiling, analysis and write all code.
+## Where the work runs
+From step 0 on, everything runs in a local Claude Code session on the Mac, which
+can join the transmitter's Wi-Fi, run Wireshark and build with Xcode.
