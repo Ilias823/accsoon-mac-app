@@ -66,6 +66,22 @@ struct AccsoonMonitorApp: App {
             CommandGroup(after: .toolbar) {
                 Toggle("Show Info Overlay", isOn: $showInfo).keyboardShortcut("i")
             }
+            CommandGroup(replacing: .newItem) {
+                Button(client.recording.isRecording ? "Stop Recording" : "Start Recording") {
+                    client.recording.isRecording ? client.recorder.stop() : client.recorder.start()
+                }
+                .keyboardShortcut("r")
+                .disabled(client.status != .live && !client.recording.isRecording)
+                Button("Show Recordings in Finder") {
+                    try? FileManager.default.createDirectory(at: Recorder.folder, withIntermediateDirectories: true)
+                    if let file = client.recording.lastFile, FileManager.default.fileExists(atPath: file.path) {
+                        NSWorkspace.shared.activateFileViewerSelecting([file])
+                    } else {
+                        NSWorkspace.shared.open(Recorder.folder)
+                    }
+                }
+                .keyboardShortcut("r", modifiers: [.command, .shift])
+            }
             CommandMenu("Tools") {
                 Toggle("False Colour", isOn: $falseColor).keyboardShortcut("f", modifiers: [])
                 Toggle("Zebra", isOn: $zebra).keyboardShortcut("z", modifiers: [])
@@ -158,6 +174,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
+
+    /// Finish the movie file before quitting, or its last moments are lost.
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard let client, client.recording.isRecording else { return .terminateNow }
+        client.recorder.stop { NSApp.reply(toApplicationShouldTerminate: true) }
+        return .terminateLater
+    }
 
     func applicationWillTerminate(_ notification: Notification) { client?.stop() }
 }

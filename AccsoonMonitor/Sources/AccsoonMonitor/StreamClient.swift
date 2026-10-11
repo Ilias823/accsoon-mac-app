@@ -42,11 +42,14 @@ final class StreamClient: ObservableObject {
 
     @Published private(set) var status: Status = .noNetwork
     @Published private(set) var info = Info()
+    @Published private(set) var recording = Recorder.State()
 
     /// Metal renderer with the monitoring tools. Nil only if Metal is unavailable.
     let renderer = VideoRenderer()
     /// The system's own video layer: no tools, used as a fallback.
     let systemLayer = AVSampleBufferDisplayLayer()
+
+    let recorder = Recorder()
 
     /// Empty means "find the Wi-Fi router".
     var manualHost = "" { didSet { lock.withLock { hostOverride = manualHost.trimmingCharacters(in: .whitespaces) } } }
@@ -94,6 +97,17 @@ final class StreamClient: ObservableObject {
         systemLayer.backgroundColor = .black
         systemLayerSelected = renderer == nil
         decoder.onFrame = { [weak self] image in self?.renderer?.display(image) }
+        recorder.onStateChange = { [weak self] state in
+            guard let self else { return }
+            if state.isRecording != self.recording.isRecording {
+                self.log(state.isRecording ? "recording started" : "recording stopped")
+            }
+            if state.lastFile != self.recording.lastFile, let file = state.lastFile {
+                self.log("recording saved: \(file.lastPathComponent), \(state.lastFrameCount) frames")
+            }
+            if let error = state.error, error != self.recording.error { self.log("recording failed: \(error)") }
+            self.recording = state
+        }
     }
 
     func start() {
@@ -278,6 +292,11 @@ final class StreamClient: ObservableObject {
                 if !output.frames.isEmpty {
                     Thread.sleep(forTimeInterval: 1.0 / 30)
                     shown += 1
+                    // ACCSOON_AUTORECORD=n records n seconds, to test recording without clicking.
+                    if let seconds = Int(ProcessInfo.processInfo.environment["ACCSOON_AUTORECORD"] ?? "") {
+                        if shown == 45 { recorder.start() }
+                        if shown == 45 + seconds * 30 { recorder.stop() }
+                    }
                     if shown == 240, let directory = ProcessInfo.processInfo.environment["ACCSOON_SNAPSHOT_DIR"] {
                         decodeQueue.sync { writeSnapshots(to: directory) }
                     }
@@ -334,8 +353,10 @@ final class StreamClient: ObservableObject {
                 if systemLayer.status == .failed { systemLayer.flush() }
                 p.waitingForKeyframe = false
             }
+            if p.waitingForKeyframe { recorder.discontinuity() }
             if !p.waitingForKeyframe,
                let sample = p.builder.makeSampleBuffer(annexB: frame.payload, isKeyframe: frame.header.isKeyframe) {
+                recorder.consume(sample, header: frame.header)
                 if useSystem {
                     systemLayer.enqueue(sample)
                 } else {

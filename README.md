@@ -6,6 +6,8 @@ poorly on the Mac.
 
 - Low-latency live view with hardware decoding, automatic reconnect
 - False colour, zebra, 3D LUTs (`.cube`), grids, signal indicator
+- Recording to QuickTime files in `~/Movies/Accsoon Monitor`, without
+  re-encoding and without the tools burned in
 - No Accsoon code or assets: the protocol was worked out for interoperability
   and is described in [docs/protocol.md](docs/protocol.md)
 
@@ -23,6 +25,7 @@ a device. Reading is harmless; changing the channel is at your own risk.
 3. Open Accsoon Monitor and allow local network access when asked.
 
 Keys: **F** false colour, **Z** zebra, **L** LUT, **G** grid, **⌘O** load LUT,
+**⌘R** record,
 **⌘I** info overlay, double-click for full screen.
 
 A diagnostic log is written to `~/Library/Logs/AccsoonMonitor.log`.

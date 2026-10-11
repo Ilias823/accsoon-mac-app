@@ -35,6 +35,9 @@ struct MonitorView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                     .padding(12)
             }
+            RecordingBadge(state: client.recording)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                .padding(12)
             if isLive, falseColor {
                 FalseColorLegend()
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
@@ -43,6 +46,62 @@ struct MonitorView: View {
         }
         .ignoresSafeArea()
         .onTapGesture(count: 2) { NSApp.keyWindow?.toggleFullScreen(nil) }
+    }
+}
+
+/// Top-right: the running recording, or for a few seconds the result of the last one.
+private struct RecordingBadge: View {
+    let state: Recorder.State
+    @State private var notice: String?
+    @State private var noticeIsError = false
+
+    var body: some View {
+        VStack(alignment: .trailing, spacing: 6) {
+            if state.isRecording, let start = state.startedAt {
+                TimelineView(.periodic(from: start, by: 1)) { context in
+                    HStack(spacing: 6) {
+                        Circle().fill(.red).frame(width: 10, height: 10)
+                        Text("REC \(Self.clock(context.date.timeIntervalSince(start)))")
+                    }
+                    .modifier(BadgeStyle())
+                }
+            }
+            if let notice {
+                Text(notice)
+                    .foregroundStyle(noticeIsError ? .orange : .white)
+                    .modifier(BadgeStyle())
+            }
+        }
+        .onChange(of: state.lastFile) { _, file in
+            if let file { show("Saved \(file.lastPathComponent) to Movies", isError: false) }
+        }
+        .onChange(of: state.error) { _, error in
+            if let error { show("Recording stopped: \(error)", isError: true) }
+        }
+    }
+
+    private func show(_ text: String, isError: Bool) {
+        notice = text
+        noticeIsError = isError
+        DispatchQueue.main.asyncAfter(deadline: .now() + (isError ? 12 : 6)) {
+            if notice == text { notice = nil }
+        }
+    }
+
+    private static func clock(_ seconds: TimeInterval) -> String {
+        let total = max(0, Int(seconds))
+        return String(format: "%02d:%02d:%02d", total / 3600, total / 60 % 60, total % 60)
+    }
+
+    private struct BadgeStyle: ViewModifier {
+        func body(content: Content) -> some View {
+            content
+                .font(.system(size: 12, weight: .semibold).monospacedDigit())
+                .foregroundStyle(.white)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(.black.opacity(0.6), in: RoundedRectangle(cornerRadius: 6))
+        }
     }
 }
 
