@@ -1,12 +1,28 @@
-# Captures contain real camera footage; keep them out of the repo.
+# Never commit Accsoon's apps or decompiled code
+*.apk
+*.xapk
+*.apks
+*.ipa
+*.app/
+decompiled/
+vendor-bin/
+
+# Captures contain real camera footage. They stay local by default;
+# remove these lines to commit a capture on purpose.
 capture.bin
 *.pcap
-captures/
+captures/*
+!captures/.gitkeep
 
-# Build output
-AccsoonMonitor/.build/
-AccsoonMonitor/build/
-__pycache__/
+# macOS / Xcode / SwiftPM
 .DS_Store
-.swiftpm/
 xcuserdata/
+DerivedData/
+build/
+.build/
+.swiftpm/
+
+# Python
+__pycache__/
+*.pyc
+.venv/

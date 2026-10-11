@@ -9,7 +9,8 @@ poorly on the Mac.
 - No Accsoon code or assets: the protocol was worked out for interoperability
   and is described in [docs/protocol.md](docs/protocol.md)
 
-Tested with one CineEye Air only.
+Not affiliated with Accsoon. This repository contains only our own notes and
+code. Tested with one CineEye Air only.
 
 ## Use
 
@@ -39,5 +40,9 @@ The script also runs the protocol checks. `swift build` on
 - `AccsoonMonitor/` — the app (`CineEyeProtocol`: packet parsing and
   reassembly; `CineEyeVideo`: H.264 decoding and LUT parsing; `AccsoonMonitor`:
   networking, Metal renderer, UI)
-- `tools/` — the Python prototype client and a fake transmitter for testing
+- `tools/` — the Python prototype client, a fake transmitter for testing it,
+  and `port_logger.py`, the early tool that just logs what an app sends
 - `docs/protocol.md` — protocol notes
+- `docs/PLAN.md` — the original project plan
+- `captures/` — a place for packet captures from your own device (ignored by
+  git by default, because they contain your footage)
