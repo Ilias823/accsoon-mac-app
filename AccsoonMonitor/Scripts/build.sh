@@ -35,5 +35,7 @@ rm -rf "$app"
 mkdir -p "$app/Contents/MacOS"
 cp "$out/AccsoonMonitor" "$app/Contents/MacOS/"
 cp Scripts/Info.plist "$app/Contents/Info.plist"
+mkdir -p "$app/Contents/Resources"
+cp Resources/AppIcon.icns "$app/Contents/Resources/"
 codesign --force --sign - "$app" >/dev/null 2>&1
 echo "built $app and $out/cineeye-replay"

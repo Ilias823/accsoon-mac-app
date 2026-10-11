@@ -13,7 +13,7 @@ struct TransmitterSettingsView: View {
     @State private var confirming = false
 
     var body: some View {
-        Section("Transmitter Wi-Fi") {
+        Section("Transmitter Wi-Fi (experimental, never tested on a device)") {
             LabeledContent("Network", value: current?.name ?? "—")
             Picker("Channel", selection: $selectedChannel) {
                 if !AccessPoint.channels.contains(selectedChannel) {

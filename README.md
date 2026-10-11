@@ -12,6 +12,10 @@ poorly on the Mac.
 Not affiliated with Accsoon. This repository contains only our own notes and
 code. Tested with one CineEye Air only.
 
+The transmitter Wi-Fi channel setting in Settings is **experimental**: its
+commands were read from the original app's code and have never been tried on
+a device. Reading is harmless; changing the channel is at your own risk.
+
 ## Use
 
 1. Quit the official Accsoon app.
