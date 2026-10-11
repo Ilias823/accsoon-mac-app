@@ -33,6 +33,48 @@ public enum Wire {
         return out
     }
 
+    static let subCmdGetAccessPoint: UInt16 = 22
+    static let subCmdSetAccessPoint: UInt16 = 24
+
+    private static func control(_ subCmd: UInt16, payload: Data = Data(), pid: UInt16 = 1) -> Data {
+        var out = Data(tcpBegin)
+        out.appendLE(pid)
+        out.appendLE(cmdControl)
+        out.appendLE(subCmd)
+        out.appendLE(UInt32(payload.count))
+        out.append(payload)
+        return out
+    }
+
+    /// Asks for the transmitter's Wi-Fi name, password and channel.
+    public static func accessPointRequest() -> Data {
+        control(subCmdGetAccessPoint)
+    }
+
+    /// Sets the transmitter's Wi-Fi name, password and channel. The three always travel together,
+    /// so to change one, send the other two exactly as `accessPointRequest` reported them.
+    /// Returns nil unless all three pass the same checks the original app applies.
+    public static func setAccessPoint(_ ap: AccessPoint) -> Data? {
+        guard ap.isValid else { return nil }
+        return control(subCmdSetAccessPoint, payload: Data("name=\(ap.name)\nkey=\(ap.password)\nchannel=\(ap.channel)".utf8))
+    }
+
+    /// Reads the settings out of a reply to either request. Also returns the reply's sub-command.
+    public static func accessPoint(fromReply reply: Data) -> (accessPoint: AccessPoint, subCmd: UInt16)? {
+        let bytes = [UInt8](reply)
+        guard isValidReply(reply) else { return nil }
+        let length = Int(bytes.readLE(UInt32.self, at: 13))
+        guard length > 0, bytes.count >= tcpHeaderSize + length,
+              let text = String(bytes: bytes[tcpHeaderSize..<tcpHeaderSize + length], encoding: .utf8)
+        else { return nil }
+        let lines = text.components(separatedBy: "\n")
+        guard lines.count == 3, lines[0].hasPrefix("name="), lines[1].hasPrefix("key="), lines[2].hasPrefix("channel="),
+              let channel = Int(lines[2].dropFirst(8).trimmingCharacters(in: .whitespacesAndNewlines))
+        else { return nil }
+        let ap = AccessPoint(name: String(lines[0].dropFirst(5)), password: String(lines[1].dropFirst(4)), channel: channel)
+        return (ap, bytes.readLE(UInt16.self, at: 11))
+    }
+
     /// True if `reply` is a well-formed control frame from the transmitter.
     public static func isValidReply(_ reply: Data) -> Bool {
         let bytes = [UInt8](reply)
@@ -73,6 +115,30 @@ public enum Wire {
         out.append(UInt8(list.count * 4))
         for index in list { out.appendLE(UInt32(index)) }
         return out
+    }
+}
+
+/// The transmitter's Wi-Fi access point settings.
+public struct AccessPoint: Equatable {
+    /// The 5 GHz channels the original app offers.
+    public static let channels = [36, 40, 44, 48, 149, 153, 157, 161, 165]
+
+    public var name: String
+    public var password: String
+    public var channel: Int
+
+    public init(name: String, password: String, channel: Int) {
+        self.name = name
+        self.password = password
+        self.channel = channel
+    }
+
+    /// The original app's rules: name 1–12 printable ASCII characters, password 8–12 digits,
+    /// channel from the list above.
+    public var isValid: Bool {
+        (1...12).contains(name.utf8.count) && name.utf8.allSatisfy { (0x20..<0x7F).contains($0) }
+            && (8...12).contains(password.utf8.count) && password.utf8.allSatisfy { (0x30...0x39).contains($0) }
+            && Self.channels.contains(channel)
     }
 }
 

@@ -55,6 +55,27 @@ There is no bitrate command on this stack: the only settings commands are
 Wi-Fi name / password / channel (set, get, reset) and a self-test. The
 transmitter adapts bitrate on its own (1024-5760 kbit/s seen).
 
+## 0c. Wi-Fi settings commands [asm, not yet seen on the wire]
+
+Same TCP framing as the keep-alive (Cmd = 1), one short connection each.
+Replies use the request's SubCmd + 1 and carry the settings as text.
+
+| SubCmd | Request | Payload |
+|---|---|---|
+| 20 | reset access point | none |
+| 22 | get access point info | none |
+| 24 | set access point | `name=<name>\nkey=<password>\nchannel=<n>` |
+
+Reply payload (21, 23, 25): three lines, `name=`, `key=`, `channel=`.
+Name, password and channel always travel together. The original app only
+accepts: name 1-12 printable ASCII characters, password 8-12 digits, channel
+one of 36, 40, 44, 48, 149, 153, 157, 161, 165 (its table also lists 0,
+meaning unknown). After a successful set it tells the user to leave and
+reconnect, so the transmitter evidently restarts its Wi-Fi.
+
+The video header's `TransQuality` is what the original app passes to its
+`showWifiSignal:` display.
+
 ## 1. Which stack the CineEye Air uses [asm]
 
 The app holds three generations of the protocol. The product table gives each

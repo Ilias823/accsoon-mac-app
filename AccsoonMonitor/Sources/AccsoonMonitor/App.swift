@@ -95,9 +95,10 @@ struct AccsoonMonitorApp: App {
                 Text("Turns off LUT, false colour and zebra. Try it if the picture misbehaves.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
+                TransmitterSettingsView(client: client)
             }
-            .padding(20)
-            .frame(width: 440)
+            .formStyle(.grouped)
+            .frame(width: 480)
         }
     }
 

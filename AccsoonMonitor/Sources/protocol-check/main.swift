@@ -166,6 +166,27 @@ do {
 // Capture file framing.
 expect(readCapture(Data([2, 0, 0xAA, 0xBB, 1, 0, 0xCC, 9, 0, 1])) == [[0xAA, 0xBB], [0xCC]], "capture reader stops at a truncated record")
 
+// Transmitter Wi-Fi settings.
+do {
+    let header = Array("ACCSOON".utf8) + [1, 0, 1, 0]
+    expect([UInt8](Wire.accessPointRequest()) == header + [22, 0, 0, 0, 0, 0], "read request")
+    let ap = AccessPoint(name: "CineEye_1234", password: "12345678", channel: 149)
+    let text = Array("name=CineEye_1234\nkey=12345678\nchannel=149".utf8)
+    expect(Wire.setAccessPoint(ap).map { [UInt8]($0) } == header + [24, 0, UInt8(text.count), 0, 0, 0] + text, "set request")
+    let reply = Data(header + [23, 0, UInt8(text.count), 0, 0, 0] + text)
+    expect(Wire.accessPoint(fromReply: reply)?.accessPoint == ap, "reply parsed")
+    expect(Wire.accessPoint(fromReply: reply)?.subCmd == 23, "reply sub-command")
+    expect(Wire.accessPoint(fromReply: Data(header + [11, 0, 3, 0, 0, 0, 0, 1, 1])) == nil, "stream reply is not settings")
+    expect(Wire.accessPoint(fromReply: reply.dropLast(3)) == nil, "truncated reply rejected")
+    // Anything the original app would refuse is never sent.
+    expect(Wire.setAccessPoint(AccessPoint(name: "ok", password: "12345678", channel: 6)) == nil, "2.4 GHz channel refused")
+    expect(Wire.setAccessPoint(AccessPoint(name: "ok", password: "1234567", channel: 36)) == nil, "short password refused")
+    expect(Wire.setAccessPoint(AccessPoint(name: "ok", password: "abcdefgh", channel: 36)) == nil, "non-digit password refused")
+    expect(Wire.setAccessPoint(AccessPoint(name: "", password: "12345678", channel: 36)) == nil, "empty name refused")
+    expect(Wire.setAccessPoint(AccessPoint(name: "thirteen chars", password: "12345678", channel: 36)) == nil, "long name refused")
+    expect(Wire.setAccessPoint(AccessPoint(name: "new\nline", password: "12345678", channel: 36)) == nil, "control character refused")
+}
+
 // .cube parsing.
 do {
     let text = """

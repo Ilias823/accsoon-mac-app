@@ -119,6 +119,57 @@ final class StreamClient: ObservableObject {
         if let route { _ = Sockets.exchange(route, port: Wire.tcpPort, request: Wire.stationOp(start: false), timeout: 0.3) }
     }
 
+    // MARK: - Transmitter settings
+
+    enum SettingsError: Error {
+        case notConnected
+        case noAnswer
+        case unexpectedAnswer
+        case refused
+    }
+
+    /// Reads the transmitter's Wi-Fi settings. Completion runs on the main thread.
+    func readAccessPoint(completion: @escaping (Result<AccessPoint, SettingsError>) -> Void) {
+        settingsExchange(Wire.accessPointRequest(), what: "read", completion: completion)
+    }
+
+    /// Changes the transmitter's Wi-Fi settings. The transmitter restarts its network afterwards.
+    func writeAccessPoint(_ ap: AccessPoint, completion: @escaping (Result<AccessPoint, SettingsError>) -> Void) {
+        guard let request = Wire.setAccessPoint(ap) else {
+            completion(.failure(.refused))
+            return
+        }
+        settingsExchange(request, what: "set channel=\(ap.channel)", completion: completion)
+    }
+
+    private func settingsExchange(_ request: Data, what: String, completion: @escaping (Result<AccessPoint, SettingsError>) -> Void) {
+        let (route, up) = lock.withLock { (self.route, linkUp) }
+        guard let route, up else {
+            completion(.failure(.notConnected))
+            return
+        }
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            let result: Result<AccessPoint, SettingsError>
+            var note = "no answer"
+            if let reply = Sockets.exchange(route, port: Wire.tcpPort, request: request, timeout: 2) {
+                if let parsed = Wire.accessPoint(fromReply: reply) {
+                    result = .success(parsed.accessPoint)
+                    // Never log the name's content or the password.
+                    note = "reply subcmd=\(parsed.subCmd) channel=\(parsed.accessPoint.channel) valid=\(parsed.accessPoint.isValid)"
+                } else {
+                    result = .failure(.unexpectedAnswer)
+                    note = "unexpected reply, \(reply.count) bytes, header=\(reply.prefix(17).map { String(format: "%02x", $0) }.joined())"
+                }
+            } else {
+                result = .failure(.noAnswer)
+            }
+            DispatchQueue.main.async {
+                self?.log("settings \(what): \(note)")
+                completion(result)
+            }
+        }
+    }
+
     // MARK: - Threads
 
     private func currentRoute() -> Route? {
@@ -396,7 +447,11 @@ final class StreamClient: ObservableObject {
         guard key != lastLogLine || now.timeIntervalSince(lastLogTime) > 10 else { return }
         lastLogLine = key
         lastLogTime = now
-        let text = "\(ISO8601DateFormatter().string(from: now)) \(line)\n"
+        log(line)
+    }
+
+    private func log(_ line: String) {
+        let text = "\(ISO8601DateFormatter().string(from: Date())) \(line)\n"
         if let handle = try? FileHandle(forWritingTo: Self.logURL) {
             handle.seekToEndOfFile()
             handle.write(Data(text.utf8))
