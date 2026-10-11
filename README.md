@@ -53,3 +53,7 @@ The script also runs the protocol checks. `swift build` on
 - `docs/PLAN.md` — the original project plan
 - `captures/` — a place for packet captures from your own device (ignored by
   git by default, because they contain your footage)
+
+## Licence
+
+[MIT](LICENSE)
