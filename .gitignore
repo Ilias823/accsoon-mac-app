@@ -1,0 +1,12 @@
+# Captures contain real camera footage; keep them out of the repo.
+capture.bin
+*.pcap
+captures/
+
+# Build output
+AccsoonMonitor/.build/
+AccsoonMonitor/build/
+__pycache__/
+.DS_Store
+.swiftpm/
+xcuserdata/

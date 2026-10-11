@@ -1,0 +1,43 @@
+# Accsoon Monitor for Mac
+
+A small macOS app that shows the live picture from an Accsoon CineEye Air
+wireless video transmitter, written from scratch because the official app runs
+poorly on the Mac.
+
+- Low-latency live view with hardware decoding, automatic reconnect
+- False colour, zebra, 3D LUTs (`.cube`), grids, signal indicator
+- No Accsoon code or assets: the protocol was worked out for interoperability
+  and is described in [docs/protocol.md](docs/protocol.md)
+
+Tested with one CineEye Air only.
+
+## Use
+
+1. Quit the official Accsoon app.
+2. Join the transmitter's Wi-Fi network (turn off any VPN).
+3. Open Accsoon Monitor and allow local network access when asked.
+
+Keys: **F** false colour, **Z** zebra, **L** LUT, **G** grid, **⌘O** load LUT,
+**⌘I** info overlay, double-click for full screen.
+
+A diagnostic log is written to `~/Library/Logs/AccsoonMonitor.log`.
+
+## Build
+
+Needs macOS 14 or later and Xcode (or just the Command Line Tools).
+
+```bash
+AccsoonMonitor/Scripts/build.sh
+open AccsoonMonitor/build/AccsoonMonitor.app
+```
+
+The script also runs the protocol checks. `swift build` on
+`AccsoonMonitor/Package.swift` builds the same targets.
+
+## Layout
+
+- `AccsoonMonitor/` — the app (`CineEyeProtocol`: packet parsing and
+  reassembly; `CineEyeVideo`: H.264 decoding and LUT parsing; `AccsoonMonitor`:
+  networking, Metal renderer, UI)
+- `tools/` — the Python prototype client and a fake transmitter for testing
+- `docs/protocol.md` — protocol notes
