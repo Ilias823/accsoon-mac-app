@@ -13,9 +13,14 @@ if [ -z "${SDKROOT:-}" ]; then
   done
 fi
 
+# ARCH=x86_64 (or arm64) cross-compiles just the app binary for that architecture;
+# Scripts/release.sh uses this to make a universal app.
+host=$(uname -m)
+arch="${ARCH:-$host}"
 out=.build/manual
+if [ "$arch" != "$host" ]; then out=".build/manual-$arch"; fi
 mkdir -p "$out"
-flags=(-O -target arm64-apple-macos14.0 -I "$out" -L "$out")
+flags=(-O -target "$arch-apple-macos14.0" -I "$out" -L "$out")
 
 lib() {
   local name=$1
@@ -25,10 +30,17 @@ lib() {
 
 lib CineEyeProtocol
 lib CineEyeVideo
-swiftc "${flags[@]}" -lCineEyeProtocol -lCineEyeVideo -o "$out/protocol-check" Sources/protocol-check/*.swift
-"$out/protocol-check"
-swiftc "${flags[@]}" -lCineEyeProtocol -lCineEyeVideo -o "$out/cineeye-replay" Sources/cineeye-replay/*.swift
+if [ "$arch" = "$host" ]; then
+  swiftc "${flags[@]}" -lCineEyeProtocol -lCineEyeVideo -o "$out/protocol-check" Sources/protocol-check/*.swift
+  "$out/protocol-check"
+  swiftc "${flags[@]}" -lCineEyeProtocol -lCineEyeVideo -o "$out/cineeye-replay" Sources/cineeye-replay/*.swift
+fi
 swiftc "${flags[@]}" -parse-as-library -lCineEyeProtocol -lCineEyeVideo -o "$out/AccsoonMonitor" Sources/AccsoonMonitor/*.swift
+
+if [ "$arch" != "$host" ]; then
+  echo "built $out/AccsoonMonitor ($arch)"
+  exit 0
+fi
 
 app=build/AccsoonMonitor.app
 rm -rf "$app"

@@ -18,6 +18,18 @@ The transmitter Wi-Fi channel setting in Settings is **experimental**: its
 commands were read from the original app's code and have never been tried on
 a device. Reading is harmless; changing the channel is at your own risk.
 
+## Download
+
+Get `Accsoon-Monitor-<version>.zip` from the
+[latest release](https://github.com/Ilias823/accsoon-mac-app/releases/latest),
+unzip it and move **Accsoon Monitor** to Applications. It runs on Apple
+silicon and Intel Macs with macOS 14 or later; no Xcode needed.
+
+The app is not notarised by Apple, so the first launch is blocked. Open it
+once, dismiss the warning, then go to **System Settings → Privacy & Security**
+and click **Open Anyway**. On macOS 14 you can instead right-click the app and
+choose **Open**.
+
 ## Use
 
 1. Quit the official Accsoon app.
@@ -39,7 +51,8 @@ AccsoonMonitor/Scripts/build.sh
 open AccsoonMonitor/build/AccsoonMonitor.app
 ```
 
-The script also runs the protocol checks. `swift build` on
+The script also runs the protocol checks. `AccsoonMonitor/Scripts/release.sh`
+builds the universal zip that is attached to releases. `swift build` on
 `AccsoonMonitor/Package.swift` builds the same targets.
 
 ## Layout
