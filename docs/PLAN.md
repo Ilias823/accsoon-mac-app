@@ -47,15 +47,15 @@ In Terminal on the Mac:
    `brew install --cask wireshark` (jadx pulls in Java automatically).
 4. Claude Code: `npm install -g @anthropic-ai/claude-code`.
 5. Project: `git clone https://github.com/Ilias823/accsoon-mac-app`,
-   `mkdir ~/accsoon-re && mv ~/Downloads/accsoon.apk ~/accsoon-re/`
+   `mkdir -p /Volumes/Code/_assets/accsoon-mac-app && mv ~/Downloads/accsoon.apk /Volumes/Code/_assets/accsoon-mac-app/`
    (APK stays outside the repo).
 6. `cd accsoon-mac-app && claude`, then: "Follow docs/PLAN.md step 1:
-   decompile ~/accsoon-re/accsoon.apk and write docs/protocol.md."
+   decompile /Volumes/Code/_assets/accsoon-mac-app/accsoon.apk and write docs/protocol.md."
 Later, for step 5: install Xcode from the Mac App Store.
 
 ### 1. Static analysis (no device)
-- APK is at `~/accsoon-re/accsoon.apk` (outside the repo). Optionally also copy the Mac app bundle
-  (`/Applications/Accsoon Go.app`) into `~/accsoon-re/` —
+- APK is at `/Volumes/Code/_assets/accsoon-mac-app/accsoon.apk` (outside the repo). Optionally also copy the Mac app bundle
+  (`/Applications/Accsoon Go.app`) into `/Volumes/Code/_assets/accsoon-mac-app/` —
   **never** committed to the repo.
 - Me: decompile with `jadx` / Ghidra. Look for: SSID/IP
   patterns, ports, socket code, packet structs/magic bytes, H.264/H.265 decoder

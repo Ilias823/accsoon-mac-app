@@ -48,7 +48,7 @@ Needs macOS 14 or later and Xcode (or just the Command Line Tools).
 
 ```bash
 AccsoonMonitor/Scripts/build.sh
-open AccsoonMonitor/build/AccsoonMonitor.app
+open AccsoonMonitor/build/AccsoonMonitor.app   # or /Volumes/Code/.derived/accsoon-mac-app/ if that folder exists
 ```
 
 The script also runs the protocol checks. `AccsoonMonitor/Scripts/release.sh`

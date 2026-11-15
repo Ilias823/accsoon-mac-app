@@ -4,6 +4,7 @@
 # Also runs the protocol checks. With a working SwiftPM, Package.swift builds the same targets.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+. Scripts/paths.sh
 
 # Use an SDK that matches the installed compiler if the default one does not.
 if [ -z "${SDKROOT:-}" ]; then
@@ -17,8 +18,8 @@ fi
 # Scripts/release.sh uses this to make a universal app.
 host=$(uname -m)
 arch="${ARCH:-$host}"
-out=.build/manual
-if [ "$arch" != "$host" ]; then out=".build/manual-$arch"; fi
+out="$objs/manual"
+if [ "$arch" != "$host" ]; then out="$objs/manual-$arch"; fi
 mkdir -p "$out"
 flags=(-O -target "$arch-apple-macos14.0" -I "$out" -L "$out")
 
@@ -42,7 +43,7 @@ if [ "$arch" != "$host" ]; then
   exit 0
 fi
 
-app=build/AccsoonMonitor.app
+app="$apps/AccsoonMonitor.app"
 rm -rf "$app"
 mkdir -p "$app/Contents/MacOS"
 cp "$out/AccsoonMonitor" "$app/Contents/MacOS/"
